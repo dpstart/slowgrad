@@ -10,6 +10,7 @@ torch = "*"
 
 [packages]
 slowdl = {editable = true,path = "."}
+yapf = "*"
 
 [requires]
 python_version = "3.7"
