@@ -63,6 +63,7 @@ def helper_test_op(shps,
 
 class TestOps(unittest.TestCase):
     def test_add(self):
-      helper_test_op([(45,65), (45,65)], lambda x,y: x+y, Tensor.add, forward_only=True)
+      helper_test_op([(45,65), (45,65)], lambda x,y: x+y, Tensor.add, forward_only=False)
     def test_sub(self):
       helper_test_op([(45,65), (45,65)], lambda x,y: x-y, Tensor.sub, forward_only=True)
+

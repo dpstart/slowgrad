@@ -64,6 +64,10 @@ class Tensor(object):
                 # Assign gradient to parent node (or accumulate if something's there already)
                 t.grad = Tensor(g) if t.grad is None else (t.grad + Tensor(g))
 
+    def mean(self):
+        div = Tensor(np.array([1/np.prod(self.shape)], dtype=self.data.dtype), requires_grad=True)
+        return self.sum().mul(div)
+
     @property
     def shape(self):
         return self.data.shape

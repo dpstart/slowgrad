@@ -31,6 +31,19 @@ class Sub(Function):
 
 register('sub', Sub)
 
+class Mul(Function):
+  @staticmethod
+  def forward(ctx, x, y):
+    ctx.save_for_backward(x, y)
+    return x*y
+
+  @staticmethod
+  def backward(ctx, grad_output):
+    x,y = ctx.to_save
+    return y*grad_output, x*grad_output
+register('mul', Mul)
+
+
 
 class MatMul(Function):
     @staticmethod
@@ -63,3 +76,5 @@ class Sum(Function):
 
 
 register('sum', Sum)
+
+
