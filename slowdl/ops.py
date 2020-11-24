@@ -30,3 +30,36 @@ class Sub(Function):
 
 
 register('sub', Sub)
+
+
+class MatMul(Function):
+    @staticmethod
+    def forward(ctx, x, y):
+        ctx.save_for_backward(x, y)
+        return x.dot(y)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        x, y = ctx.to_save
+        grad_x = grad_output.dot(y.T)
+        grad_y = x.T.dot(grad_output)
+        return grad_x, grad_y
+
+
+register('mm', MatMul)
+register('dot', MatMul)
+
+
+class Sum(Function):
+    @staticmethod
+    def forward(ctx, input):
+        ctx.save_for_backward(input)
+        return np.array([input.sum()])
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, = ctx.to_save
+        return grad_output * np.ones_like(input)
+
+
+register('sum', Sum)

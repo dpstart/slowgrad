@@ -1,10 +1,10 @@
 from slowdl.tensor3 import Tensor
 import numpy as np
 
-a = Tensor([1, 2, 3, 4, 5], requires_grad=True)
-b = Tensor([2, 2, 2, 2, 2], requires_grad=True)
+x = Tensor(np.eye(3), requires_grad=True)
+y = Tensor([[2.0, 0, -2.0]], requires_grad=True)
+z = y.mm(x).sum()
+z.backward()
 
-c = a + b
-c.backward()
-
-print(a.grad)
+print(x.grad)  # dz/dx
+print(y.grad)  # dz/dy
