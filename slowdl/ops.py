@@ -43,7 +43,31 @@ class Mul(Function):
     return y*grad_output, x*grad_output
 register('mul', Mul)
 
+class Div(Function):
+  @staticmethod
+  def forward(ctx, x, y):
+    ctx.save_for_backward(x, y)
+    return x/y
 
+  @staticmethod
+  def backward(ctx, grad_output):
+    x,y = ctx.to_save
+    return (1/y)*grad_output, -(x/np.square(y))*grad_output
+register('div', Div)
+
+class Pow(Function):
+    @staticmethod
+    def forward(ctx, input, power):
+        ctx.save_for_backward(input, power)
+        return input**power
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, power = ctx.to_save
+        return grad_output * power*(input**(power-1)), grad_output* input**power*np.log(input)
+
+
+register('pow', Pow)
 
 class MatMul(Function):
     @staticmethod
@@ -76,5 +100,6 @@ class Sum(Function):
 
 
 register('sum', Sum)
+
 
 
