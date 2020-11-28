@@ -1,5 +1,5 @@
 import numpy as np
-from .tensor3 import Function, register
+from .tensor import Function, register
 
 
 class Add(Function):
@@ -101,5 +101,36 @@ class Sum(Function):
 
 register('sum', Sum)
 
+
+class Relu(Function):
+    @staticmethod
+    def forward(ctx, input):
+        ctx.save_for_backward(input)
+        return np.array(np.maximum(input,0))
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input,  = ctx.to_save
+        return grad_output * (input>=0)
+
+
+register('relu', Relu)
+
+class LogSoftmax(Function):
+  @staticmethod
+  def forward(ctx, input):
+    def logsumexp(x):
+      #return np.log(np.exp(x).sum(axis=1))
+      c = x.max(axis=1)
+      return c + np.log(np.exp(x-c.reshape((-1, 1))).sum(axis=1))
+    output = input - logsumexp(input).reshape((-1, 1))
+    ctx.save_for_backward(output)
+    return output
+
+  @staticmethod
+  def backward(ctx, grad_output):
+    output, = ctx.to_save
+    return grad_output - np.exp(output)*(grad_output.sum(axis=1).reshape((-1, 1)))
+register('logsoftmax', LogSoftmax)
 
 

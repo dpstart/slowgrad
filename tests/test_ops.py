@@ -6,7 +6,7 @@ import pytest
 import timeit
 import functools
 
-from slowdl.tensor3 import Tensor
+from slowdl.tensor import Tensor
 
 
 def helper_test_op(shps,

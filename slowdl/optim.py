@@ -1,17 +1,27 @@
-class SGD(object):
-    def __init__(self, parameters, alpha=0.1):
+class Optimizer(object):
+
+    def __init__(self, parameters):
         self.parameters = parameters
-        self.alpha = alpha
 
-    def zero(self):
+    def get_params(self):
+        return self.parameters
+
+    def zero_grad(self):
         for p in self.parameters:
-            p.grad.data *= 0
+            p.grad = None
 
-    def step(self, zero=True):
+class SGD(Optimizer):
+    def __init__(self, parameters, lr=0.1):
+
+        super().__init__(parameters)
+        self.lr = lr
+
+    def step(self):
 
         for p in self.parameters:
+            p.data -= p.grad.data * self.lr
 
-            p.data -= p.grad.data * self.alpha
-
-            if (zero):
-                p.grad.data *= 0
+class Adam(Optimizer):
+    pass
+class RMSProp(Optimizer):
+    pass

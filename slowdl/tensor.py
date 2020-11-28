@@ -1,121 +1,175 @@
 import numpy as np
-from typing import Union, List
+from typing import Union, List, Any
+from inspect import signature
+
+import torch
 
 
 class Tensor(object):
-    def __init__(self,
-                 data: Union[List, np.array],
-                 parents=None,
-                 genesis_op=None,
-                 requires_grad=False,
-                 id=None):
-        self.data = np.array(data)
-        self.parents = parents
-        self.genesis_op = genesis_op
+    def __init__(self, data: Union[List, np.array], requires_grad=False):
+        self.data = np.array(data, dtype=np.float32)
         self.requires_grad = requires_grad
 
-        if (id is None):
-            self.id = np.random.randint(0, 100000)
-        else:
-            self.id = id
-
         self.grad = None
-        self.children = {}
 
-        if parents is not None:
-            for p in parents:
-                if self.id not in p.children:
-                    p.children[self.id] = 1
-                else:
-                    p.children[self.id] += 1
+        # A context object is an instance of a Function.
+        # Its purpose is to save information used when backpropagating.
+        self._ctx = None
 
-    def all_children_grads_accounted_for(self):
-        for id, cnt in self.children.items():
-            if (cnt != 0):
-                return False
-        return True
+    # A dictionary that assigns the operations to the class.
+    ops = {}
 
-    def backward(self, grad=None, grad_origin=None):
+    def assign(self, x):
+        self.data = x.data
+    
+    @staticmethod
+    def zeros(*shape):
+        return Tensor(np.zeros(shape, dtype=np.float32))
 
-        if self.requires_grad:
+    @staticmethod
+    def ones(*shape):
+        return Tensor(np.ones(shape, dtype=np.float32))
 
-            if grad is None:
-                grad = Tensor(np.ones_like(self.data))
+    @staticmethod
+    def randn(*shape):
+        return Tensor(np.random.randn(*shape).astype(np.float32))
 
-            if (grad_origin is not None):
-                if (self.children[grad_origin.id] == 0):
-                    raise Exception("cannot backprop more than once")
-                else:
-                    self.children[grad_origin.id] -= 1
+    @staticmethod
+    def eye(dim):
+        return Tensor(np.eye(dim).astype(np.float32))
 
-            if self.grad is None:
-                self.grad = grad
-            else:
-                self.grad += grad
+    def backward(self):
 
-            if (self.parents is not None
-                    and (self.all_children_grads_accounted_for()
-                         or grad_origin is None)):
+        # A Tensor that is created as a result of an operation will have a Context set.
+        if self._ctx is None:
+            return
 
-                if self.genesis_op == "add":
-                    self.parents[0].backward(self.grad, self)
-                    self.parents[1].backward(self.grad, self)
-                elif self.genesis_op == "neg":
-                    self.parents[0].backward(self.grad.__neg__(), self)
-                elif self.genesis_op == "sub":
-                    self.parents[0].backward(Tensor(self.grad.data), self)
-                    self.parents[1].backward(self.grad.__neg__().data, self)
+        if self.grad is None:
+            # fill in the first grad with one
+            # this is "implicit gradient creation"
+            self.grad = Tensor(np.ones(self.data.shape, dtype=self.data.dtype))
+
+        # Visited will containes Tensors in topological order starting from the "first children"
+        visited, nodes = set(), []
+
+        def deepwalk(node):
+            visited.add(node)
+            if node._ctx:
+                for i in node._ctx.parents:
+                    if i not in visited:
+                        deepwalk(i)
+                nodes.append(node)
+
+        deepwalk(self)
+
+        # Go through nodes starting from the current one.
+        # For each node, compute the gradient by calling the `backward` function of the Context object.
+        for t0 in reversed(nodes):
+
+            assert (t0.grad is not None)
+
+            grads = t0._ctx.backward(t0._ctx, t0.grad.data)
+            if len(t0._ctx.parents) == 1:
+                grads = [grads]
+            for t, g in zip(t0._ctx.parents, grads):
+                if g is None:
+                    continue
+                assert g.shape == t.data.shape, \
+                "grad shape must match tensor shape in %r, %r != %r" % (self._ctx, g.shape, t.data.shape)
+
+                # Assign gradient to parent node (or accumulate if something's there already)
+                t.grad = Tensor(g) if t.grad is None else (t.grad + Tensor(g))
+
+    def mean(self):
+        div = Tensor(np.array([1/np.prod(self.shape)], dtype=self.data.dtype), requires_grad=True)
+        return self.sum().mul(div)
 
     @property
     def shape(self):
         return self.data.shape
 
-    def __add__(self, other):
-        if self.requires_grad and other.requires_grad:
-            out = Tensor(self.data + other.data,
-                         parents=[self, other],
-                         genesis_op="add",
-                         requires_grad=True)
-
-        out = Tensor(self.data + other.data)
-        return out
-
-    def __neg__(self):
-
-        if (self.requires_grad):
-            return Tensor(self.data * -1,
-                          parents=[self],
-                          genesis_op="neg",
-                          requires_grad=True)
-        return Tensor(self.data * -1)
-
-    def __sub__(self, other):
-        if self.requires_grad and other.requires_grad:
-            return Tensor(self.data - other.data,
-                          parents=[self, other],
-                          genesis_op="sub",
-                          requires_grad=True)
-
-        return Tensor(self.data - other.data)
-
     def __repr__(self):
         return str(self.data.__repr__())
 
     def __str__(self):
-        return str(self.data.__str__())
+        return f"Tensor: {str(self.data.__str__())}, requires_grad={self.requires_grad}"
 
 
-if __name__ == "__main__":
+class Function():
+    r"""
+    """
+    def __init__(self, *tensors):
+        self.parents = tensors
+        self.to_saves = []
 
-    a = Tensor([1, 2, 3, 4, 5], requires_grad=True)
-    b = Tensor([2, 2, 2, 2, 2], requires_grad=True)
-    c = Tensor([5, 4, 3, 2, 1], requires_grad=True)
+    def apply(self, *x, **kwargs):
+        op = self
+        ctx = op(*x)
+        # use default params
+        params = signature(op.forward).parameters
+        for p in params.values():
+            if p.default is not p.empty:
+                setattr(ctx, p.name, p.default)
+        # overwrite with passed params
+        for k, v in kwargs.items():
+            setattr(ctx, k, v)
+        ret = Tensor(op.forward(ctx, *[t.data for t in x], **kwargs))
+        ret._ctx = ctx
+        return ret
 
-    d = a + b
-    e = b + c
-    f = d + e
-    f.backward()
-    f = f + b
-    f.backward()
+    def save_for_backward(self, *tensors):
+        r"""Saves given tensors for a future call to :func:`~Function.backward`.
 
-    print(b.grad.data)
+        **This should be called at most once, and only from inside the**
+        :func:`forward` **method.**
+
+        Later, saved tensors can be accessed through the :attr:`saved_tensors`
+        attribute. Before returning them to the user, a check is made to ensure
+        they weren't used in any in-place operation that modified their content.
+
+        Arguments can also be ``None``.
+        """
+        self.to_save = tensors
+
+    @staticmethod
+    def forward(ctx: Any, *args: Any, **kwargs: Any) -> Any:
+        r"""
+        """
+        raise NotImplementedError(
+            "You must implement the forward function for custom"
+            " autograd.Function.")
+
+    @staticmethod
+    def backward(ctx: Any, *grad_outputs: Any) -> Any:
+        r"""
+        """
+        raise NotImplementedError(
+            "You must implement the backward function for custom"
+            " autograd.Function.")
+
+
+def register(name, fxn):
+    """Register an op in the Tensor class. 
+    Override operators when possible.
+
+    Args:
+        name (str): Name of the op
+        fxn (Function subclass): A subclass of Function that defines the operation
+    """
+
+    Tensor.ops[name] = fxn
+
+    def dispatch(*x, **kwargs):
+        f = Tensor.ops[name]
+        return f.apply(f, *x, **kwargs)
+
+    setattr(Tensor, name, dispatch)
+    if name in ['add', 'sub', 'mul', 'div']:
+        setattr(Tensor, "__%s__" % name, dispatch)
+        setattr(Tensor, "__i%s__" % name,
+                lambda self, x: self.assign(dispatch(self, x)))
+
+
+# Inspired from tinygrad. This import is used for registering the operation in the Tensor class.
+# TODO: change
+import slowdl.ops

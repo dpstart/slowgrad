@@ -7,10 +7,12 @@ verify_ssl = true
 pytest = "*"
 pre-commit = "*"
 torch = "*"
+requests = "*"
 
 [packages]
 slowdl = {editable = true,path = "."}
 yapf = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.7"
