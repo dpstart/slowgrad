@@ -73,3 +73,4 @@ class TestOps(unittest.TestCase):
     def test_pow(self):
       helper_test_op([(45,65), (45,65)], lambda x,y: x**y, Tensor.pow)
 
+      

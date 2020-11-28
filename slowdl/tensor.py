@@ -21,6 +21,9 @@ class Tensor(object):
 
     def assign(self, x):
         self.data = x.data
+
+    def _requires_grad_(self):
+        self.requires_grad = True
     
     @staticmethod
     def zeros(*shape):
