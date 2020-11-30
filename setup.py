@@ -8,7 +8,7 @@ with open(os.path.join(directory, 'README.md'), encoding='utf-8') as f:
   long_description = f.read()
 
 setup(name='slowgrad',
-      version='0.1.0',
+      version='0.2.0',
       description='Take it slow, compute gradients',
       author='Daniele Paliotta',
       license='MIT',

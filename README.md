@@ -9,6 +9,9 @@ A small neural network library optimized for learning.
 
 Inspired by PyTorch, micrograd, and tinygrad.
 
+## Installation
+`pip3 install slowgrad`
+
 ## Build an MNIST Convnet
 
 ```python
