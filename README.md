@@ -2,7 +2,7 @@
   slowgrad
  </h1>
 <p align="center">
-![Unit Tests](https://github.com/dpstart/slowgrad/workflows/Unit%20tests/badge.svg)
+    <img src="https://github.com/dpstart/slowgrad/workflows/Unit%20tests/badge.svg" alt="Unit tests" />
 </p>
 
 A small neural network library optimized for learning.
