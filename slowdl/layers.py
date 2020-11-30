@@ -28,6 +28,11 @@ class Linear(Layer):
 
     def forward(self, input):
         return input.dot(self.weight)
+    
+    def __call__(self, input):
+        return input.dot(self.weight)
+        
+
 
 class Conv2d(Layer):
 
@@ -42,8 +47,11 @@ class Conv2d(Layer):
             W = init_fn(*shape)
         
         self.weight = Tensor(W, requires_grad=True)
-        
         self.parameters.append(self.weight)
 
     def forward(self, input):
         return input.conv2d(self.weight)
+    
+    def __call__(self, input):
+        return input.conv2d(self.weight)
+    

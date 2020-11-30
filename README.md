@@ -26,10 +26,10 @@ class TinyConvNetLayer:
 
   def forward(self, x):
     x = x.reshape(shape=(-1, 1, 28, 28))
-    x = self.c1.forward(x).relu().max_pool2d()
-    x = self.c2.forward(x).relu().max_pool2d()
+    x = self.c1(x).relu().max_pool2d()
+    x = self.c2(x).relu().max_pool2d()
     x = x.reshape(shape=[x.shape[0], -1])
-    return self.l1.forward(x).logsoftmax()
+    return self.l1(x).logsoftmax()
 ```
 
 --------------------------------------------------------------------
