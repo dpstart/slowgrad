@@ -1,6 +1,6 @@
 <h1 align="center">
   slowgrad
- </he>
+ </h1>
  
 ![Unit Tests](https://github.com/dpstart/slowgrad/workflows/Unit%20tests/badge.svg)
 
