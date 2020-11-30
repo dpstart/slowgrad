@@ -12,7 +12,7 @@ Inspired by PyTorch, micrograd, and tinygrad.
 ## Build an MNIST Convnet
 
 ```python
-from slowdl.layers import Linear, Conv2d
+from slowgrad.layers import Linear, Conv2d
 
 class TinyConvNetLayer:
   def __init__(self):

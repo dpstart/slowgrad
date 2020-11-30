@@ -177,4 +177,4 @@ def register(name, fxn):
 
 # Inspired from tinygrad. This import is used for registering the operation in the Tensor class.
 # TODO: change
-import slowdl.ops
+import slowgrad.ops

@@ -1,5 +1,4 @@
 class Optimizer(object):
-
     def __init__(self, parameters):
         self.parameters = parameters
 
@@ -9,6 +8,7 @@ class Optimizer(object):
     def zero_grad(self):
         for p in self.parameters:
             p.grad = None
+
 
 class SGD(Optimizer):
     def __init__(self, parameters, lr=0.1):
@@ -21,7 +21,10 @@ class SGD(Optimizer):
         for p in self.parameters:
             p.data -= p.grad.data * self.lr
 
+
 class Adam(Optimizer):
     pass
+
+
 class RMSProp(Optimizer):
     pass

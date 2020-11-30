@@ -7,11 +7,16 @@ verify_ssl = true
 pytest = "*"
 requests = "*"
 torch = "*"
+yapf = "*"
 
 [packages]
-slowdl = {editable = true,path = "."}
-yapf = "*"
+slowdgrad = {editable = true,path = "."}
+numpy = "*"
 tqdm = "*"
+
+[scripts]
+format = "yapf . -ir"
+test = "pytest"
 
 [requires]
 python_version = "3.7"

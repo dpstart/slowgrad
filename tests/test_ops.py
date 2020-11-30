@@ -6,7 +6,7 @@ import pytest
 import timeit
 import functools
 
-from slowdl.tensor import Tensor
+from slowgrad.tensor import Tensor
 
 
 def helper_test_op(shps,
@@ -63,14 +63,22 @@ def helper_test_op(shps,
 
 class TestOps(unittest.TestCase):
     def test_add(self):
-      helper_test_op([(45,65), (45,65)], lambda x,y: x+y, Tensor.add, forward_only=False)
-    def test_sub(self):
-      helper_test_op([(45,65), (45,65)], lambda x,y: x-y, Tensor.sub, forward_only=True)
-    def test_mul(self):
-      helper_test_op([(45,65), (45,65)], lambda x,y: x*y, Tensor.mul)
-    def test_div(self):
-      helper_test_op([(45,65), (45,65)], lambda x,y: x/y, Tensor.div)
-    def test_pow(self):
-      helper_test_op([(45,65), (45,65)], lambda x,y: x**y, Tensor.pow)
+        helper_test_op([(45, 65), (45, 65)],
+                       lambda x, y: x + y,
+                       Tensor.add,
+                       forward_only=False)
 
-      
+    def test_sub(self):
+        helper_test_op([(45, 65), (45, 65)],
+                       lambda x, y: x - y,
+                       Tensor.sub,
+                       forward_only=True)
+
+    def test_mul(self):
+        helper_test_op([(45, 65), (45, 65)], lambda x, y: x * y, Tensor.mul)
+
+    def test_div(self):
+        helper_test_op([(45, 65), (45, 65)], lambda x, y: x / y, Tensor.div)
+
+    def test_pow(self):
+        helper_test_op([(45, 65), (45, 65)], lambda x, y: x**y, Tensor.pow)

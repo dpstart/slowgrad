@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from slowdl.tensor import Tensor
+from slowgrad.tensor import Tensor
 
 
 @pytest.mark.unittest

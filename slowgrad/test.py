@@ -1,4 +1,4 @@
-from slowdl.tensor import Tensor
+from slowgrad.tensor import Tensor
 import numpy as np
 
 x = Tensor(np.eye(3), requires_grad=True)
