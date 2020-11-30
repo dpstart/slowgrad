@@ -3,6 +3,7 @@
  </h1>
 <p align="center">
     <img src="https://github.com/dpstart/slowgrad/workflows/Unit%20tests/badge.svg" alt="Unit tests" />
+    <a href="https://badge.fury.io/py/slowgrad"><img src="https://badge.fury.io/py/slowgrad.svg" alt="PyPI version" height="18"></a>
 </p>
 
 A small neural network library optimized for learning.
