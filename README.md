@@ -9,4 +9,27 @@ A small neural network library optimized for learning.
 
 Inspired by PyTorch, micrograd, and tinygrad.
 
+# Build an MNIST Convnet
+
+```python
+from slowdl.layers import Linear, Conv2d
+
+class TinyConvNetLayer:
+  def __init__(self):
+
+    self.c1 = Conv2d(1,8,kernel_size=(3,3))
+    self.c2 = Conv2d(8,16,kernel_size=(3,3))
+    self.l1 = Linear(16*5*5,10)
+
+  def parameters(self):
+    return [*self.l1.get_parameters(), *self.c1.get_parameters(), *self.c2.get_parameters()]
+
+  def forward(self, x):
+    x = x.reshape(shape=(-1, 1, 28, 28)) # hacks
+    x = self.c1.forward(x).relu().max_pool2d()
+    x = self.c2.forward(x).relu().max_pool2d()
+    x = x.reshape(shape=[x.shape[0], -1])
+    return self.l1.forward(x).logsoftmax()
+```
+
 --------------------------------------------------------------------
