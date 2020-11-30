@@ -2,8 +2,6 @@ import numpy as np
 from typing import Union, List, Any
 from inspect import signature
 
-import torch
-
 
 class Tensor(object):
     def __init__(self, data: Union[List, np.array], requires_grad=False):
