@@ -9,7 +9,7 @@ A small neural network library optimized for learning.
 
 Inspired by PyTorch, micrograd, and tinygrad.
 
-# Build an MNIST Convnet
+## Build an MNIST Convnet
 
 ```python
 from slowdl.layers import Linear, Conv2d
