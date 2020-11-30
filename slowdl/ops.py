@@ -116,6 +116,7 @@ class Relu(Function):
 
 register('relu', Relu)
 
+
 class LogSoftmax(Function):
   @staticmethod
   def forward(ctx, input):
@@ -133,6 +134,19 @@ class LogSoftmax(Function):
     return grad_output - np.exp(output)*(grad_output.sum(axis=1).reshape((-1, 1)))
 register('logsoftmax', LogSoftmax)
 
+
+class Reshape(Function):
+    @staticmethod
+    def forward(ctx, x, shape):
+        ctx.save_for_backward(x.shape)
+        return x.reshape(shape)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        in_shape, = ctx.to_save
+        return grad_output.reshape(in_shape)
+
+register('reshape', Reshape)
 
 class Conv2d(Function):
     @staticmethod
@@ -174,7 +188,7 @@ class Conv2d(Function):
     @staticmethod
     def backward(ctx, grad_output):
         bs,_,oy,ox = grad_output.shape
-        tx, tw, x_shape = ctx.saved_tensors
+        tx, tw, x_shape = ctx.to_save
         _,rcout,cin,H,W = tw.shape
         ys,xs = ctx.stride
         OY,OX = x_shape[2:4]
@@ -200,4 +214,39 @@ class Conv2d(Function):
 
 
 register('conv2d', Conv2d)
+
+def stack_for_pool(x, py, px):
+  my, mx = (x.shape[2]//py)*py, (x.shape[3]//px)*px
+  stack = []
+  xup = x[:, :, :my, :mx]
+  for Y in range(py):
+    for X in range(px):
+      stack.append(xup[:, :, Y::py, X::px][None])
+  return np.concatenate(stack, axis=0)
+
+def unstack_for_pool(fxn, s, py, px):
+  my, mx = (s[2]//py)*py, (s[3]//px)*px
+  for Y in range(py):
+    for X in range(px):
+      ll = fxn(Y*px+X)
+      if X == 0 and Y == 0:
+        ret = np.zeros(s, dtype=ll.dtype)
+      ret[:, :, Y:my:py, X:mx:px] = ll
+  return ret
+
+class MaxPool2D(Function):
+  @staticmethod
+  def forward(ctx, x, kernel_size=(2, 2)):
+    stack = stack_for_pool(x, *kernel_size)
+    idxs = np.argmax(stack, axis=0)
+    ctx.save_for_backward(idxs, x.shape)
+    return np.max(stack, axis=0)
+
+  @staticmethod
+  def backward(ctx, grad_output):
+    idxs,s = ctx.to_save
+    return unstack_for_pool(
+      lambda idx: grad_output * (idxs == idx),
+      s, *ctx.kernel_size)
+register('max_pool2d', MaxPool2D)
 

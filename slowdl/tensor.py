@@ -24,7 +24,7 @@ class Tensor(object):
 
     def _requires_grad_(self):
         self.requires_grad = True
-    
+
     @staticmethod
     def zeros(*shape):
         return Tensor(np.zeros(shape, dtype=np.float32))
@@ -84,7 +84,9 @@ class Tensor(object):
                 t.grad = Tensor(g) if t.grad is None else (t.grad + Tensor(g))
 
     def mean(self):
-        div = Tensor(np.array([1/np.prod(self.shape)], dtype=self.data.dtype), requires_grad=True)
+        div = Tensor(np.array([1 / np.prod(self.shape)],
+                              dtype=self.data.dtype),
+                     requires_grad=True)
         return self.sum().mul(div)
 
     @property

@@ -34,6 +34,27 @@ class TinyBobNet:
   def forward(self, x):
     return x.dot(self.l1).relu().dot(self.l2).logsoftmax()
 
+# create a model
+class TinyConvNet:
+  def __init__(self):
+    # https://keras.io/examples/vision/mnist_convnet/
+    conv = 3
+    #inter_chan, out_chan = 32, 64
+    inter_chan, out_chan = 8, 16   # for speed
+    self.c1 = Tensor(layer_init_uniform(inter_chan,1,conv,conv))
+    self.c2 = Tensor(layer_init_uniform(out_chan,inter_chan,conv,conv))
+    self.l1 = Tensor(layer_init_uniform(out_chan*5*5, 10))
+
+  def parameters(self):
+    return [self.l1, self.c1, self.c2]
+
+  def forward(self, x):
+    x = x.reshape(shape=(-1, 1, 28, 28)) # hacks
+    x = x.conv2d(self.c1).relu().max_pool2d()
+    x = x.conv2d(self.c2).relu().max_pool2d()
+    x = x.reshape(shape=[x.shape[0], -1])
+    return x.dot(self.l1).logsoftmax()
+
 
 # create a model
 class TinyBobNetLayer:
@@ -51,10 +72,14 @@ class TinyBobNetLayer:
     return x.logsoftmax()
 
 
+  
+
 
 def train(model, optim, steps, BS=128):
   losses, accuracies = [], []
-  for i in trange(steps):
+
+  t = trange(steps)
+  for i in t:
     optim.zero_grad()
     samp = np.random.randint(0, X_train.shape[0], size=(BS))
 
@@ -80,7 +105,7 @@ def train(model, optim, steps, BS=128):
     loss = loss.data
     losses.append(loss)
     accuracies.append(accuracy)
-    #print("loss %.2f accuracy %.2f" % (loss, accuracy))
+    t.set_description("loss %.2f accuracy %.2f" % (loss, accuracy))
 
 def evaluate(model):
   def numpy_eval():
@@ -106,3 +131,17 @@ class TestMNIST(unittest.TestCase):
         optimizer = optim.SGD(model.parameters(), lr=0.001)
         train(model, optimizer, steps=1000)
         evaluate(model)
+    # def test_convnet(self):
+    #   np.random.seed(1337)
+    #   model = TinyConvNet()
+    #   optimizer = optim.SGD(model.parameters(), lr=0.001)
+    #   train(model, optimizer, steps=1000)
+    #   evaluate(model)
+
+if __name__ == "__main__":
+
+  np.random.seed(1337)
+  model = TinyConvNet()
+  optimizer = optim.SGD(model.parameters(), lr=0.001)
+  train(model, optimizer, steps=1000)
+  evaluate(model)

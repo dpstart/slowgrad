@@ -6,8 +6,8 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 pre-commit = "*"
-torch = "*"
 requests = "*"
+torch = "*"
 
 [packages]
 slowdl = {editable = true,path = "."}
