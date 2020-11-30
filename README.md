@@ -1,5 +1,5 @@
 # slowgrad
-![Unit Tests](https://github.com/dpstart/slowgrad/workflows/Python%20application/badge.svg)
+![Unit Tests](https://github.com/dpstart/slowgrad/workflows/Unit%20tests/badge.svg)
 
 --------------------------------------------------------------------
 
