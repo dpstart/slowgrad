@@ -7,7 +7,7 @@ from slowdl.utils import fetch, layer_init_uniform
 import slowdl.optim as optim
 from tqdm import trange
 
-from slowdl.layers import Linear
+from slowdl.layers import Linear, Conv2d
 
 # mnist loader
 def fetch_mnist():
@@ -55,6 +55,27 @@ class TinyConvNet:
     x = x.reshape(shape=[x.shape[0], -1])
     return x.dot(self.l1).logsoftmax()
 
+# create a model
+class TinyConvNetLayer:
+  def __init__(self):
+    # https://keras.io/examples/vision/mnist_convnet/
+    conv = 3
+    #inter_chan, out_chan = 32, 64
+    inter_chan, out_chan = 8, 16   # for speed
+    self.c1 = Conv2d(1,8,kernel_size=(3,3), init_fn=layer_init_uniform)
+    self.c2 = Conv2d(8,16,kernel_size=(3,3), init_fn=layer_init_uniform)
+    self.l1 = Linear(16*5*5,10,init_fn=layer_init_uniform)
+
+  def parameters(self):
+    return [*self.l1.get_parameters(), *self.c1.get_parameters(), *self.c2.get_parameters()]
+
+  def forward(self, x):
+    x = x.reshape(shape=(-1, 1, 28, 28)) # hacks
+    x = self.c1.forward(x).relu().max_pool2d()
+    x = self.c2.forward(x).relu().max_pool2d()
+    x = x.reshape(shape=[x.shape[0], -1])
+    return self.l1.forward(x).logsoftmax()
+
 
 # create a model
 class TinyBobNetLayer:
@@ -70,9 +91,6 @@ class TinyBobNetLayer:
     x = x.relu()
     x = self.fc2.forward(x)
     return x.logsoftmax()
-
-
-  
 
 
 def train(model, optim, steps, BS=128):
@@ -138,10 +156,17 @@ class TestMNIST(unittest.TestCase):
     #   train(model, optimizer, steps=1000)
     #   evaluate(model)
 
+    # def test_convnet_layer(self):
+    #   np.random.seed(1337)
+    #   model = TinyConvNetLayer()
+    #   optimizer = optim.SGD(model.parameters(), lr=0.001)
+    #   train(model, optimizer, steps=1000)
+    #   evaluate(model)
+
 if __name__ == "__main__":
 
   np.random.seed(1337)
-  model = TinyConvNet()
+  model = TinyConvNetLayer()
   optimizer = optim.SGD(model.parameters(), lr=0.001)
   train(model, optimizer, steps=1000)
   evaluate(model)

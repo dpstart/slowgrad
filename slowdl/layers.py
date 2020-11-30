@@ -28,3 +28,22 @@ class Linear(Layer):
 
     def forward(self, input):
         return input.dot(self.weight)
+
+class Conv2d(Layer):
+
+    def __init__(self, in_channels, out_channels, kernel_size=(2,2), stride=1,init_fn=None):
+        super().__init__(init_fn=init_fn)
+
+        shape = (out_channels, in_channels, *kernel_size)
+
+        if  self.init_fn is None:
+            W = np.random.randn(*shape) * np.sqrt(2.0/(n_inputs))
+        else:
+            W = init_fn(*shape)
+        
+        self.weight = Tensor(W, requires_grad=True)
+        
+        self.parameters.append(self.weight)
+
+    def forward(self, input):
+        return input.conv2d(self.weight)

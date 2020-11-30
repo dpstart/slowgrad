@@ -2,6 +2,7 @@ import numpy as np
 from .tensor import Function, register
 
 
+
 class Add(Function):
     @staticmethod
     def forward(ctx, x, y):
