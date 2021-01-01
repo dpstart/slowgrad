@@ -5,7 +5,7 @@ from setuptools import setup
 
 directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(directory, 'README.md'), encoding='utf-8') as f:
-  long_description = f.read()
+    long_description = f.read()
 
 setup(name='slowgrad',
       version='0.2.0',
@@ -14,10 +14,10 @@ setup(name='slowgrad',
       license='MIT',
       long_description=long_description,
       long_description_content_type='text/markdown',
-      packages = ['slowgrad'],
+      packages=['slowgrad'],
       classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License"
+          "Programming Language :: Python :: 3",
+          "License :: OSI Approved :: MIT License"
       ],
       install_requires=['numpy', 'tqdm'],
       python_requires='>=3.7',

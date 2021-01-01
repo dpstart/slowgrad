@@ -10,12 +10,12 @@ from tqdm import trange
 import gzip
 
 
-
 def numpy_eval():
     Y_test_preds_out = model.forward(
         Tensor(X_test.reshape((-1, 28 * 28)).astype(np.float32)))
     Y_test_preds = np.argmax(Y_test_preds_out.data, axis=1)
     return (Y_test == Y_test_preds).mean()
+
 
 def fetch_mnist():
     import gzip
@@ -34,6 +34,7 @@ def fetch_mnist():
         fetch(
             "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"))[8:]
     return X_train, Y_train, X_test, Y_test
+
 
 class TinyConvNet:
     def __init__(self):
@@ -54,7 +55,6 @@ class TinyConvNet:
         x = self.c2(x).relu().max_pool2d()
         x = x.reshape(shape=[x.shape[0], -1])
         return self.l1(x).logsoftmax()
-    
 
 
 # load the mnist dataset
@@ -96,9 +96,6 @@ for i in t:
     losses.append(loss)
     accuracies.append(accuracy)
     t.set_description("loss %.2f accuracy %.2f" % (loss, accuracy))
-
-
-
 
 accuracy = numpy_eval()
 print("test set accuracy is %f" % accuracy)

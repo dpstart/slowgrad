@@ -172,9 +172,8 @@ class Conv2d(Function):
         cout, cin, H, W = w.shape
         ys, xs = ctx.stride
         # HxW of input
-        x = np.pad(x, ((0,0), (0,0),
-            (padding,padding), (padding,padding)),
-            constant_values=0)
+        x = np.pad(x, ((0, 0), (0, 0), (padding, padding), (padding, padding)),
+                   constant_values=0)
         bs, cin_ = x.shape[0], x.shape[1]
 
         #output H and W
@@ -185,13 +184,12 @@ class Conv2d(Function):
         assert cin == cin_
         # batch size X input channels X input  H x input  W
         gx = x
-        
+
         tx = np.lib.stride_tricks.as_strided(
             gx,
             shape=(bs, cin, oy, ox, H, W),
-            strides=(gx.strides[0], gx.strides[1],
-                     gx.strides[2] * ys, gx.strides[3] * xs, gx.strides[2],
-                     gx.strides[3]),
+            strides=(gx.strides[0], gx.strides[1], gx.strides[2] * ys,
+                     gx.strides[3] * xs, gx.strides[2], gx.strides[3]),
             writeable=False,
         )
 
@@ -210,28 +208,28 @@ class Conv2d(Function):
         cout, cin, H, W = tw.shape
         ys, xs = ctx.stride
         OY, OX = x_shape[2:4]
-       
+
         ggg = grad_output.reshape(bs, cout, oy, ox)
 
         gdw = np.tensordot(ggg, tx, ((0, 2, 3), (0, 2, 3)))
 
         # needs to be optimized
         gdx = np.zeros((bs, cin, OY, OX), dtype=tx.dtype)
-        for Y in range(grad_output.shape[2]-H):
-            for X in range(grad_output.shape[3]-W):
+        for Y in range(grad_output.shape[2]):
+            for X in range(grad_output.shape[3]):
                 iY, iX = Y * ys, X * xs
-                gdx[:,: , iY:iY+H, iX:iX+W] += np.einsum('ik,kjyx->ijyx', ggg[:,:,Y,X], tw)
+                gdx[:, :, iY:iY + H,
+                    iX:iX + W] += np.einsum('ik,kjyx->ijyx', ggg[:, :, Y, X],
+                                            tw)
                 #tg = np.dot(ggg[:, :, Y, X].reshape(bs, -1),
                 #                tw.reshape(cout, -1))
                 #gdx[:, :, iY:iY + H, iX:iX + W] += tg.reshape(
                 #         (bs, cin, H, W))
-        
 
         if padding > 0:
-            gdx = gdx[:,:,padding:-padding, padding:-padding]
-       
-        return gdx, gdw.reshape(
-            (cout, cin, H, W))
+            gdx = gdx[:, :, padding:-padding, padding:-padding]
+
+        return gdx, gdw.reshape((cout, cin, H, W))
 
 
 register('conv2d', Conv2d)

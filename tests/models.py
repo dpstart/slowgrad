@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from slowgrad.tensor import Tensor
