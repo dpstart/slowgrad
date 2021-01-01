@@ -1,5 +1,5 @@
 import numpy as np
-from .tensor import Function, register
+from .tensor import Function, register, Tensor
 
 
 class Add(Function):
@@ -165,26 +165,27 @@ register('reshape', Reshape)
 
 class Conv2d(Function):
     @staticmethod
-    def forward(ctx, x, w, stride=1):
+    def forward(ctx, x, w, stride=1, padding=1):
         if type(ctx.stride) == int:
             ctx.stride = (ctx.stride, ctx.stride)
 
         cout, cin, H, W = w.shape
         ys, xs = ctx.stride
         # HxW of input
+        x = np.pad(x, ((0,0), (0,0),
+            (padding,padding), (padding,padding)),
+            constant_values=0)
         bs, cin_ = x.shape[0], x.shape[1]
 
         #output H and W
-        oy, ox = (x.shape[2] - (H - ys)) // ys, (x.shape[3] - (W - xs)) // xs
-        
+        oy, ox = (x.shape[2] - (H - 1)) // ys, (x.shape[3] - (W - 1)) // xs
+
         # Number of expected input channels in kernels need to match number of
         # channels in input element
         assert cin == cin_
-
         # batch size X input channels X input  H x input  W
-        # This is now useless, but useful to clarify shapes.
-        gx = x.reshape(bs, cin, x.shape[2], x.shape[3])
-
+        gx = x
+        
         tx = np.lib.stride_tricks.as_strided(
             gx,
             shape=(bs, cin, oy, ox, H, W),
@@ -196,42 +197,40 @@ class Conv2d(Function):
 
         # This is now useless as well. Keeping it for clarity.
         tw = w.reshape(cout, cin, H, W)
-        ctx.save_for_backward(tx, tw, x.shape)
+        ctx.save_for_backward(tx, tw, x.shape, padding)
 
-        #ret = np.zeros((bs, oy, ox, cout), dtype=x.dtype)
-        #for g in range(ctx.groups):
-            #ijYXyx,kjyx -> iYXk ->ikYX
         ret = np.tensordot(tx, tw, ((1, 4, 5), (1, 2, 3)))
+
         return np.moveaxis(ret, 3, 1).reshape(bs, cout, oy, ox)
 
     @staticmethod
     def backward(ctx, grad_output):
         bs, _, oy, ox = grad_output.shape
-        tx, tw, x_shape = ctx.to_save
+        tx, tw, x_shape, padding = ctx.to_save
         cout, cin, H, W = tw.shape
         ys, xs = ctx.stride
         OY, OX = x_shape[2:4]
-
+       
         ggg = grad_output.reshape(bs, cout, oy, ox)
 
-        #gdw = np.zeros((cout, cin, H, W), dtype=tx.dtype)
-        #for g in range(ctx.groups):
-            #'ikYX,ijYXyx -> kjyx'
         gdw = np.tensordot(ggg, tx, ((0, 2, 3), (0, 2, 3)))
 
         # needs to be optimized
         gdx = np.zeros((bs, cin, OY, OX), dtype=tx.dtype)
-        for Y in range(grad_output.shape[2]):
-            for X in range(grad_output.shape[3]):
+        for Y in range(grad_output.shape[2]-H):
+            for X in range(grad_output.shape[3]-W):
                 iY, iX = Y * ys, X * xs
-                #gdx[:,:,: , iY:iY+H, iX:iX+W] += np.einsum('igk,gkjyx->igjyx', ggg[:,:,:,Y,X], tw)
-                #for g in range(ctx.groups):
-                tg = np.dot(ggg[:, :, Y, X].reshape(bs, -1),
-                                tw.reshape(cout, -1))
-                gdx[:, :, iY:iY + H, iX:iX + W] += tg.reshape(
-                        (bs, cin, H, W))
+                gdx[:,: , iY:iY+H, iX:iX+W] += np.einsum('ik,kjyx->ijyx', ggg[:,:,Y,X], tw)
+                #tg = np.dot(ggg[:, :, Y, X].reshape(bs, -1),
+                #                tw.reshape(cout, -1))
+                #gdx[:, :, iY:iY + H, iX:iX + W] += tg.reshape(
+                #         (bs, cin, H, W))
+        
 
-        return gdx.reshape((bs, cin, OY, OX)), gdw.reshape(
+        if padding > 0:
+            gdx = gdx[:,:,padding:-padding, padding:-padding]
+       
+        return gdx, gdw.reshape(
             (cout, cin, H, W))
 
 
