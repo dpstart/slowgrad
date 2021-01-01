@@ -165,7 +165,7 @@ register('reshape', Reshape)
 
 class Conv2d(Function):
     @staticmethod
-    def forward(ctx, x, w, stride=1, padding=1):
+    def forward(ctx, x, w, stride=1, padding=0):
         if type(ctx.stride) == int:
             ctx.stride = (ctx.stride, ctx.stride)
 
