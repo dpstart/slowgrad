@@ -1,10 +1,10 @@
 from slowgrad.tensor import Tensor
 import numpy as np
 
-x = Tensor(np.eye(3), requires_grad=True)
-y = Tensor([[2.0, 0, -2.0]], requires_grad=True)
-z = y.mm(x).sum()
-z.backward()
 
-print(x.grad)  # dz/dx
-print(y.grad)  # dz/dy
+x = Tensor(np.random.rand(1,3,32,32), requires_grad=True)
+w = Tensor(np.random.rand(1,3,5,5), requires_grad=True)
+out = x.conv2d(w)
+
+
+print(out.shape)
