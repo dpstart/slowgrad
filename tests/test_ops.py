@@ -90,7 +90,7 @@ class TestOps(unittest.TestCase):
         x = Tensor(inn, requires_grad=True)
         w = Tensor(w_in, requires_grad=True)
 
-        out = x.conv2d(w)
+        out = x.conv2d(w, padding=1)
         out_torch = F.conv2d(torch.tensor(inn),
                              torch.tensor(w_in),
                              stride=1,
