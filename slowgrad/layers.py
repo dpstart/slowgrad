@@ -38,6 +38,7 @@ class Conv2d(Layer):
                  out_channels,
                  kernel_size=(2, 2),
                  stride=1,
+                 padding=0,
                  init_fn=None):
         super().__init__(init_fn=init_fn)
 

@@ -81,6 +81,12 @@ class Tensor(object):
                 # Assign gradient to parent node (or accumulate if something's there already)
                 t.grad = Tensor(g) if t.grad is None else (t.grad + Tensor(g))
 
+
+    def div(self, y):
+        return self * (y**-1.0)
+
+    def sqrt(self):
+        return self.pow(0.5)
     def mean(self):
         div = Tensor(np.array([1 / np.prod(self.shape)],
                               dtype=self.data.dtype),
@@ -163,6 +169,9 @@ def register(name, fxn):
     Tensor.ops[name] = fxn
 
     def dispatch(*x, **kwargs):
+        tt = [arg for arg in x if isinstance(arg, Tensor)][0]
+        x = [Tensor(np.array([arg])) if not isinstance(arg, Tensor) else arg
+             for arg in x]
         f = Tensor.ops[name]
         return f.apply(f, *x, **kwargs)
 
@@ -171,8 +180,7 @@ def register(name, fxn):
         setattr(Tensor, "__%s__" % name, dispatch)
         setattr(Tensor, "__i%s__" % name,
                 lambda self, x: self.assign(dispatch(self, x)))
-
-
+        setattr(Tensor, "__r%s__" % name, lambda self,x: dispatch(x, self))
 # Inspired from tinygrad. This import is used for registering the operation in the Tensor class.
 # TODO: change
 import slowgrad.ops

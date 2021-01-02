@@ -48,8 +48,8 @@ class TinyConvNetLayer:
         conv = 3
         #inter_chan, out_chan = 32, 64
         inter_chan, out_chan = 8, 16  # for speed
-        self.c1 = Conv2d(1, 8, kernel_size=(3, 3), init_fn=layer_init_uniform)
-        self.c2 = Conv2d(8, 16, kernel_size=(3, 3), init_fn=layer_init_uniform)
+        self.c1 = Conv2d(1, 8, kernel_size=(3, 3), padding=1, init_fn=layer_init_uniform)
+        self.c2 = Conv2d(8, 16, kernel_size=(3, 3), padding=1, init_fn=layer_init_uniform)
         self.l1 = Linear(784, 10, init_fn=layer_init_uniform)
 
     def parameters(self):

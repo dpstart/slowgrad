@@ -114,6 +114,6 @@ if __name__ == "__main__":
 
     np.random.seed(1337)
     model = TinyConvNetLayer()
-    optimizer = optim.SGD(model.parameters(), lr=0.001)
+    optimizer = optim.RMSProp(model.parameters(), lr=0.001)
     train(model, optimizer, steps=1000)
     evaluate(model)
