@@ -163,6 +163,16 @@ class Reshape(Function):
 register('reshape', Reshape)
 
 
+class Transpose(Function):
+    @staticmethod
+    def forward(ctx, x, order):
+        ctx.save_for_backward(order)
+        return np.transpose(x, order)
+    @staticmethod
+    def backward(ctx, x):
+        return np.transpose(x, np.argsort(ctx.order)
+
+register("transpose", Transpose)
 class Conv2d(Function):
     @staticmethod
     def forward(ctx, x, w, stride=1, padding=0):
